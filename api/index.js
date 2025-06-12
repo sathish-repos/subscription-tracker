@@ -1,12 +1,12 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 
-import { PORT } from "./config/env.js";
-import authRoutes from "./routes/auth.routes.js";
-import userRouter from "./routes/user.routes.js";
-import subscriptionRouter from "./routes/subscription.routes.js";
-import connectToMongooseDB from "./database/mongoose.js";
-import errorMiddleware from "./middlewares/error.middleware.js";
+import { PORT } from "../config/env.js";
+import authRoutes from "../routes/auth.routes.js";
+import userRouter from "../routes/user.routes.js";
+import subscriptionRouter from "../routes/subscription.routes.js";
+import connectToMongooseDB from "../database/mongoose.js";
+import errorMiddleware from "../middlewares/error.middleware.js";
 
 const app = express();
 
