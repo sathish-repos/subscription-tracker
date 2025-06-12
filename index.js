@@ -20,6 +20,10 @@ app.use("/api/v1/users", userRouter);
 
 app.use("/api/v1/subscriptions", subscriptionRouter);
 
+app.get("/", (req, res) =>
+  res.send("<h1> welcome to subscription tracker </h1>")
+);
+
 app.use(errorMiddleware);
 
 app.listen(PORT, () => {
