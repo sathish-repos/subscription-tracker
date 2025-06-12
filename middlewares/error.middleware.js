@@ -1,35 +1,35 @@
 const errorMiddleware = (err, req, res, next) => {
   try {
-    let error = { ...err };
-
-    error.message = err.message;
-
+    // Log the error for debugging
     console.error(err);
 
-    // Mongoose bad ObjectId
-    if (err.name === "CastError") {
-      const message = "Resource not found";
-      error = new Error(message);
-      error.statusCode = 404;
-    }
+    let statusCode = err.statusCode || 500;
+    let message = err.message || "Internal Server Error";
 
-    // Mongoose duplicate key
-    if (err.code === 11000) {
-      const message = "Duplicate field value entered";
-      error = new Error(message);
-      error.statusCode = 400;
-    }
-
-    // Mongoose validation error
     if (err.name === "ValidationError") {
-      const message = Object.values(err.errors).map((val) => val.message);
-      error = new Error(message.join(", "));
-      error.statusCode = 400;
+      const messages = Object.values(err.errors).map((val) => val.message);
+      message = messages.join(", ");
+      statusCode = 400;
+    } else if (err.name === "CastError") {
+      message = `Resource not found. Invalid: ${err.path}`;
+      statusCode = 404;
+    } else if (err.code === 11000) {
+      message = `Duplicate field value entered: ${JSON.stringify(
+        err.keyValue
+      )}`;
+      statusCode = 400;
+    } else if (err.name === "JsonWebTokenError") {
+      message = "Invalid token, please log in again.";
+      statusCode = 401;
+    } else if (err.name === "TokenExpiredError") {
+      message = "Token expired, please log in again.";
+      statusCode = 401;
     }
 
-    res
-      .status(error.statusCode || 500)
-      .json({ success: false, error: error.message || "Server Error" });
+    res.status(statusCode).json({
+      success: false,
+      message,
+    });
   } catch (error) {
     next(error);
   }

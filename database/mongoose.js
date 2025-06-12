@@ -10,7 +10,7 @@ if (!MONGO_URI) {
 const connectToMongooseDB = async () => {
   try {
     await mongoose.connect(MONGO_URI);
-    console.log(`Connected to MongoDB at ${NODE_ENV}`);
+    console.log(`Connected to MongoDB at ${NODE_ENV} environment`);
   } catch (error) {
     console.log(`Failed to connect to MongoDB: ${error.message}`);
     // eslint-disable-next-line no-undef
