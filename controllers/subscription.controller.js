@@ -12,3 +12,17 @@ export const createSubscription = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getUserSubscriptions = async (req, res, next) => {
+  try {
+    console.log(req);
+    if (req.params.id !== req.user._id.toString())
+      return res.status(401).json({ message: "Unauthorized" });
+
+    const subscriptions = await Subscription.find({ userId: req.params.id });
+
+    res.status(200).json({ status: true, subscriptions });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -26,6 +26,9 @@ export const getUser = async (req, res, next) => {
       throw error;
     }
 
+    if (user._id.toString() !== req.user._id.toString())
+      return res.status(401).json({ message: "Unauthorized" });
+
     res.status(200).send({
       success: true,
       message: "user found",
