@@ -7,92 +7,93 @@ const subscriptionSchema = new mongoose.Schema(
       required: [true, "Subscription name is required"],
       trim: true,
       minLength: 2,
-      maxLength: 50,
+      maxLength: 100,
     },
     price: {
       type: Number,
-      required: [true, "Price is required"],
-      min: [0, "Price must be a positive number"],
+      required: [true, "Subscription price is required"],
+      min: [0, "Price must be greater than 0"],
     },
     currency: {
       type: String,
-      enum: ["INR", "USD", "EUR", "GBP"], // Add more currencies as needed
-      default: "INR",
+      enum: ["USD", "EUR", "GBP"],
+      default: "USD",
     },
     frequency: {
       type: String,
-      enum: ["weekly", "monthly", "yearly"],
-      default: "monthly",
+      enum: ["daily", "weekly", "monthly", "yearly"],
     },
     category: {
       type: String,
-      enum: ["sport", "entertainment", "education", "health", "other"],
-      required: [true, "Category is required"],
+      enum: [
+        "sports",
+        "news",
+        "entertainment",
+        "lifestyle",
+        "technology",
+        "finance",
+        "politics",
+        "other",
+      ],
+      required: true,
     },
-    paymentType: {
+    paymentMethod: {
       type: String,
-      required: [true, "Payment type is required"],
+      required: true,
       trim: true,
+    },
+    status: {
+      type: String,
+      enum: ["active", "cancelled", "expired"],
+      default: "active",
+    },
+    startDate: {
+      type: Date,
+      default: new Date(),
+      validate: {
+        validator: (value) => value <= new Date(),
+        message: "Start date must be in the past",
+      },
+    },
+    renewalDate: {
+      type: Date,
+      validate: {
+        validator: function (value) {
+          return value > this.startDate;
+        },
+        message: "Renewal date must be after the start date",
+      },
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true, // Index for faster lookups
-    },
-    status: {
-      type: String,
-      enum: ["active", "inactive", "cancelled"],
-      default: "active",
-    },
-    startDate: {
-      type: Date,
-      required: [true, "Start date is required"],
-      validate: {
-        validator: function (v) {
-          // Ensure start date is not in the future
-          return v <= Date.now();
-        },
-        message: (props) =>
-          `Start date ${props.value} cannot be in the future!`,
-      },
-    },
-    endDate: {
-      type: Date,
-      required: [true, "End date is required"],
-      validate: {
-        validator: function (v) {
-          // Ensure end date is after start date
-          return v > this.startDate;
-        },
-        message: (props) =>
-          `End date ${props.value} must be after the start date!`,
-      },
+      index: true,
     },
   },
-  {
-    timestamps: true, // Automatically manage createdAt and updatedAt fields
-  }
+  { timestamps: true }
 );
 
+// Auto-calculate renewal date if missing.
 subscriptionSchema.pre("save", function (next) {
-  if (!this.endDate) {
+  if (!this.renewalDate) {
     const renewalPeriods = {
+      daily: 1,
       weekly: 7,
-      monthly: 28,
+      monthly: 30,
       yearly: 365,
     };
-    // Set renewal date to end date if not provided
-    this.endDate = new Date(this.startDate);
-    this.endDate.setDate(
-      this.endDate.getDate() + renewalPeriods[this.frequency]
+
+    this.renewalDate = new Date(this.startDate);
+    this.renewalDate.setDate(
+      this.renewalDate.getDate() + renewalPeriods[this.frequency]
     );
   }
 
-  if (this.endDate < new Date()) {
-    this.status = "inactive"; // Automatically set status to inactive if end date is in the past
+  // Auto-update the status if renewal date has passed
+  if (this.renewalDate < new Date()) {
+    this.status = "expired";
   }
-
   next();
 });
 
